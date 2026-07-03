@@ -1,0 +1,10 @@
+- Use `dispatch` when the task fits an available agent. Don't wait for the user to ask.
+- Available agents: {{agents}}.
+- Pass only the task in `prompt`; the agent's role is applied automatically. Don't restate role instructions it already has.
+- Omit `agent` to inherit the parent model with no role prompt.
+- `dispatch` runs in the background; it returns a placeholder immediately and the result arrives later as a separate message. Don't poll it or check progress. Do other work or answer the user.
+- Wait for the `dispatch` result when you need it for the next step. Keep working in parallel when the other work is unrelated.
+- Each `dispatch` prompt should stand on its own: goal, relevant paths, and whether you want research or implementation.
+- In `dispatch` code, `dp.run()` only starts a run; await `dp.join(id)` or call `dp.cancel(id)` before returning.
+- To check on a dispatch mid-flight, read the transcript files in the directory given in the tool result; retry if a file doesn't exist yet.
+- Trust but verify: a `dispatch` run reports what it intended, not what it did.

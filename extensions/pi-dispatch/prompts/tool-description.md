@@ -1,0 +1,1 @@
+Use dispatch to delegate self-contained work to child agents. Reach for it when the task spans several files, needs parallel exploration, or would flood your context with raw output. Use direct tools for a single known lookup. Once you've delegated, wait for the result instead of doing the same work yourself.
