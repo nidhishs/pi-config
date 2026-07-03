@@ -1,0 +1,12 @@
+node_modules/
+
+# macOS
+.DS_Store
+
+# logs
+*.log
+npm-debug.log*
+
+# env
+.env
+.env.*

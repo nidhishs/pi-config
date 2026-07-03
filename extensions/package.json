@@ -1,0 +1,21 @@
+{
+  "name": "pi-extensions",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.79",
+    "@earendil-works/pi-coding-agent": "^0.79",
+    "@earendil-works/pi-tui": "^0.79",
+    "@types/node": "^25",
+    "typebox": "^1",
+    "typescript": "^5"
+  }
+}
