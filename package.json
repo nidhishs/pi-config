@@ -1,0 +1,11 @@
+{
+  "name": "pi-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "for d in extensions/*/; do (cd \"$d\" && npm install); done",
+    "check": "for d in extensions/*/; do (cd \"$d\" && npm run check); done",
+    "test": "for d in extensions/*/; do (cd \"$d\" && npm test); done"
+  }
+}
