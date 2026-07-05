@@ -2,26 +2,27 @@
 
 import { getAgentDir, type AgentToolResult, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Type } from "typebox";
 import { AGENT_LIST, resolveSubagent } from "./agents.ts";
+import { renderPrompt } from "./prompting.ts";
 import { spawnSubagent } from "./spawn.ts";
 import { listSubagents, runDispatchCode, type DispatchCtx, type Subagents } from "./runtime.ts";
 import { DispatchWidget, renderDispatchCall, renderDispatchCompletion, renderDispatchResult } from "./ui.ts";
 import type { DispatchResult } from "./types.ts";
 
-function prompt(name: string): string {
-  return readFileSync(new URL(`./prompts/${name}`, import.meta.url), "utf8")
-    .trim()
-    .replaceAll("{{agents}}", AGENT_LIST);
-}
+const prompt = (name: string) => new URL(`./prompts/${name}.md`, import.meta.url);
+const promptVars = { agents: AGENT_LIST };
 
-const TOOL_DESCRIPTION = prompt("tool-description.md");
-const PROMPT_SNIPPET = prompt("prompt-snippet.md");
-const PROMPT_GUIDELINES = prompt("prompt-guidelines.md");
-const TASK_PARAM = prompt("task-param-description.md");
-const CODE_PARAM = `${prompt("code-param-description.md")}\n\n${prompt("dp-api-docs.md")}`;
+const TOOL_DESCRIPTION = renderPrompt(prompt("tool-description"), promptVars);
+const PROMPT_SNIPPET = renderPrompt(prompt("prompt-snippet"), promptVars);
+const PROMPT_GUIDELINES = renderPrompt(prompt("prompt-guidelines"), promptVars)
+  .split(/\r?\n/).map((line) => line.trim().replace(/^[-*+]\s+/, "")).filter(Boolean);
+const TASK_PARAM = renderPrompt(prompt("task-param-description"), promptVars);
+const CODE_PARAM = [
+  renderPrompt(prompt("code-param-description"), promptVars),
+  renderPrompt(prompt("dp-api-docs"), promptVars),
+].join("\n\n");
 
 const DISPATCH_RESULT = "dispatch_result"; // customType for the background completion message
 
@@ -88,8 +89,7 @@ export default function (pi: ExtensionAPI) {
     label: "dispatch",
     description: TOOL_DESCRIPTION,
     promptSnippet: PROMPT_SNIPPET,
-    promptGuidelines: PROMPT_GUIDELINES
-      .split(/\r?\n/).map((line) => line.trim().replace(/^[-*+]\s+/, "")).filter(Boolean),
+    promptGuidelines: PROMPT_GUIDELINES,
     parameters: Type.Object({
       task: Type.String({ description: TASK_PARAM }),
       code: Type.String({ description: CODE_PARAM }),
