@@ -1,1 +1,0 @@
-Async JS body. Only `dp` is in scope. Await or cancel any spawned runs before returning; a run you don't join is cancelled when your code returns. Return a value to set the dispatch result (stringified); otherwise the concatenated outputs of this dispatch's runs, in spawn order, are used.

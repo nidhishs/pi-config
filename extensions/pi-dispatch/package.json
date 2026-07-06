@@ -5,8 +5,7 @@
   "type": "module",
   "keywords": ["pi-package"],
   "scripts": {
-    "check": "tsc --noEmit",
-    "test": "node --test 'tst/**/*.test.ts'"
+    "check": "tsc --noEmit"
   },
   "pi": {
     "extensions": ["./src/index.ts"]

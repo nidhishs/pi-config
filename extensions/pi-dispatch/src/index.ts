@@ -15,14 +15,11 @@ const prompt = (name: string) => new URL(`./prompts/${name}.md`, import.meta.url
 const promptVars = { agents: AGENT_LIST };
 
 const TOOL_DESCRIPTION = renderPrompt(prompt("tool-description"), promptVars);
-const PROMPT_SNIPPET = renderPrompt(prompt("prompt-snippet"), promptVars);
-const PROMPT_GUIDELINES = renderPrompt(prompt("prompt-guidelines"), promptVars)
+const PROMPT_SNIPPET = renderPrompt(prompt("tool-prompt-snippet"), promptVars);
+const PROMPT_GUIDELINES = renderPrompt(prompt("tool-prompt-guidelines"), promptVars)
   .split(/\r?\n/).map((line) => line.trim().replace(/^[-*+]\s+/, "")).filter(Boolean);
-const TASK_PARAM = renderPrompt(prompt("task-param-description"), promptVars);
-const CODE_PARAM = [
-  renderPrompt(prompt("code-param-description"), promptVars),
-  renderPrompt(prompt("dp-api-docs"), promptVars),
-].join("\n\n");
+const TASK_PARAM = renderPrompt(prompt("tool-param-task-description"), promptVars);
+const CODE_PARAM = renderPrompt(prompt("tool-param-code-description"), promptVars);
 
 const DISPATCH_RESULT = "dispatch_result"; // customType for the background completion message
 
@@ -56,6 +53,8 @@ export default function (pi: ExtensionAPI) {
     ctx: ExtensionContext, task: string, code: string, signal: AbortSignal | undefined,
   ): Promise<AgentToolResult<DispatchResult>> {
     const dispatchId = randomUUID();
+    const id = dispatchId.slice(0, 8);
+    const transcriptDir = dispatchDir(dispatchId);
     const startedAt = Date.now();
     const interactive = ctx.mode === "tui";
 
@@ -65,23 +64,22 @@ export default function (pi: ExtensionAPI) {
       ({ dispatchId, task, code, startedAt, finishedAt, subagents: listSubagents(subagents, dispatchId) });
     const result = (text: string, finishedAt?: number): AgentToolResult<DispatchResult> =>
       ({ content: [{ type: "text" as const, text }], details: details(finishedAt) });
+    const dispatchResult = (content: string) => renderPrompt(prompt("event-dispatch-result"), { id, content });
 
-    if (!interactive) return result(await runDispatchCode(code, dctx), Date.now());
+    if (!interactive) return result(dispatchResult(await runDispatchCode(code, dctx)), Date.now());
 
     widget.track(ctx.ui, dispatchId, task, startedAt);
     // fire-and-forget: runDispatchCode returns error text rather than rejecting
     void runDispatchCode(code, dctx).then((text) => {
       const finishedAt = Date.now();
+      const snapshot = details(finishedAt); // capture before widget.finish() evicts subagents from the shared Map
       widget.finish(dispatchId, finishedAt);
       pi.sendMessage(
-        { customType: DISPATCH_RESULT, content: text, display: true, details: details(finishedAt) },
+        { customType: DISPATCH_RESULT, content: dispatchResult(text), display: true, details: snapshot },
         { deliverAs: "steer", triggerTurn: true },
       );
     }).catch(() => {/* dispatch outlived the runtime (reload/shutdown): sendMessage throws, nothing to deliver to */});
-    return result(
-      `Dispatched (${dispatchId.slice(0, 8)}): ${task}. ` +
-      `Live transcripts in ${dispatchDir(dispatchId)}/. Continue unrelated work or wait if blocked.`,
-    );
+    return result(renderPrompt(prompt("event-dispatch-started"), { id, task, transcriptDir }));
   }
 
   pi.registerTool({

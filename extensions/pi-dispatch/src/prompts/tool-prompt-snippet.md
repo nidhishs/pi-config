@@ -1,0 +1,1 @@
+Delegate bounded, self-contained subtasks to child agents; best for parallel, multi-file, or context-heavy work, not single known lookups.
