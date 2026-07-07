@@ -5,21 +5,21 @@ import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { Type } from "typebox";
 import { AGENT_LIST, resolveSubagent } from "./agents.ts";
-import { renderPrompt } from "./prompting.ts";
+import { createPromptLoader } from "pi-shared-utils/prompting";
 import { spawnSubagent } from "./spawn.ts";
 import { listSubagents, runDispatchCode, type DispatchCtx, type Subagents } from "./runtime.ts";
 import { DispatchWidget, renderDispatchCall, renderDispatchCompletion, renderDispatchResult } from "./ui.ts";
 import type { DispatchResult } from "./types.ts";
 
-const prompt = (name: string) => new URL(`./prompts/${name}.md`, import.meta.url);
+const prompts = createPromptLoader(import.meta.url);
 const promptVars = { agents: AGENT_LIST };
 
-const TOOL_DESCRIPTION = renderPrompt(prompt("tool-description"), promptVars);
-const PROMPT_SNIPPET = renderPrompt(prompt("tool-prompt-snippet"), promptVars);
-const PROMPT_GUIDELINES = renderPrompt(prompt("tool-prompt-guidelines"), promptVars)
+const TOOL_DESCRIPTION = prompts.render("tool-description", promptVars);
+const PROMPT_SNIPPET = prompts.render("tool-prompt-snippet", promptVars);
+const PROMPT_GUIDELINES = prompts.render("tool-prompt-guidelines", promptVars)
   .split(/\r?\n/).map((line) => line.trim().replace(/^[-*+]\s+/, "")).filter(Boolean);
-const TASK_PARAM = renderPrompt(prompt("tool-param-task-description"), promptVars);
-const CODE_PARAM = renderPrompt(prompt("tool-param-code-description"), promptVars);
+const TASK_PARAM = prompts.render("tool-param-task-description", promptVars);
+const CODE_PARAM = prompts.render("tool-param-code-description", promptVars);
 
 const DISPATCH_RESULT = "dispatch_result"; // customType for the background completion message
 
@@ -64,7 +64,7 @@ export default function (pi: ExtensionAPI) {
       ({ dispatchId, task, code, startedAt, finishedAt, subagents: listSubagents(subagents, dispatchId) });
     const result = (text: string, finishedAt?: number): AgentToolResult<DispatchResult> =>
       ({ content: [{ type: "text" as const, text }], details: details(finishedAt) });
-    const dispatchResult = (content: string) => renderPrompt(prompt("event-dispatch-result"), { id, content });
+    const dispatchResult = (content: string) => prompts.render("event-dispatch-result", { id, content });
 
     if (!interactive) return result(dispatchResult(await runDispatchCode(code, dctx)), Date.now());
 
@@ -79,7 +79,7 @@ export default function (pi: ExtensionAPI) {
         { deliverAs: "steer", triggerTurn: true },
       );
     }).catch(() => {/* dispatch outlived the runtime (reload/shutdown): sendMessage throws, nothing to deliver to */});
-    return result(renderPrompt(prompt("event-dispatch-started"), { id, task, transcriptDir }));
+    return result(prompts.render("event-dispatch-started", { id, task, transcriptDir }));
   }
 
   pi.registerTool({
