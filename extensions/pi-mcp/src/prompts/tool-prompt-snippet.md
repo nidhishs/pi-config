@@ -1,0 +1,1 @@
+Inspect and invoke tools on configured MCP servers

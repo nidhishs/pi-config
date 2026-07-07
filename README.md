@@ -8,26 +8,25 @@ Extensions live under `extensions/`. Each extension is an independently installa
 
 Current extensions:
 
-- `extensions/pi-dispatch`: adds the `dispatch` tool for running delegated subagent tasks.
+- `extensions/pi-dispatch`: adds the `dispatch` tool for delegating tasks to subagents.
+- `extensions/pi-mcp`: connects Pi to MCP servers lazily (`describe` -> `call`).
+
+## Shared Utilities
+
+- `extensions/pi-shared-utils`: reusable utilities shared by the extensions. It is not itself a Pi extension.
 
 ## Development
 
-Install dependencies for all extensions:
+Install dependencies for all packages:
 
 ```sh
 npm run setup
 ```
 
-Typecheck all extensions:
+Typecheck all packages:
 
 ```sh
 npm run check
 ```
 
-Run all extension tests:
-
-```sh
-npm test
-```
-
-The root package is only a developer harness. Dependencies remain isolated inside each extension package.
+The root package is only a developer harness. Dependencies remain isolated inside each extension and utility package.

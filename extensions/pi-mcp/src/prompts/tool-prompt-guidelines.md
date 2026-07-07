@@ -1,0 +1,2 @@
+- Use `mcp` to access configured MCP servers: {{servers}}.
+- Use `mcp` with `describe` before `call` when a server's tools or schemas are unfamiliar.

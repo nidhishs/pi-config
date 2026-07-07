@@ -1,0 +1,1 @@
+Access tools on configured MCP servers without loading every tool definition.
