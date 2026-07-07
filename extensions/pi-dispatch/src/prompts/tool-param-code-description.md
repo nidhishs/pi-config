@@ -6,7 +6,7 @@ dp.join(id: string): Promise<{ id: string; output?: string; error?: string; sess
 dp.cancel(id: string): void
 ```
 
-`dp.run(...)` starts a child in this dispatch and returns its id. Join or cancel every id this body starts before returning, or that child is cancelled on exit. `dp.join(id)` is this body's wait mechanism; do not sleep, poll, or loop over transcripts for progress.
+`dp.run(...)` starts a child and returns a scope-local id. Use `dp.join(id)` to wait for it or `dp.cancel(id)` to cancel it; both only accept ids returned by `dp.run(...)` in this same body. Join or cancel every child this body starts before returning, or it will be cancelled on exit. Do not sleep, poll, or read transcripts for progress.
 
 Child prompts are self-contained: the child has not seen this conversation. Include the goal, relevant files/facts, and output shape. Choose format by use: JSON/structured data for comparing, merging, routing, or passing onward; focused findings with enough context/evidence when the parent will read it.
 

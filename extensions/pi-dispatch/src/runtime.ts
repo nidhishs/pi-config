@@ -25,8 +25,8 @@ export async function runDispatchCode(code: string, dctx: DispatchCtx): Promise<
   const dp = {
     run: (prompt: string, agent?: string) => start(String(prompt), agent, dctx).id,
     // join's projection is what the model sees -- keep it minimal
-    join: (id: string) => requireSubagent(id, dctx.subagents).done.then(({ id, output, error, sessionPath }) => ({ id, output, error, sessionPath })),
-    cancel: (id: string) => { const r = requireSubagent(id, dctx.subagents); if (!r.finishedAt) r.abort(); },
+    join: (id: string) => requireSubagent(id, dctx).done.then(({ id, output, error, sessionPath }) => ({ id, output, error, sessionPath })),
+    cancel: (id: string) => { const r = requireSubagent(id, dctx); if (!r.finishedAt) r.abort(); },
   };
   try {
     const result = await new AsyncFunction("dp", code)(dp);
@@ -43,9 +43,9 @@ export async function runDispatchCode(code: string, dctx: DispatchCtx): Promise<
   }
 }
 
-function requireSubagent(id: string, subagents: Subagents): SubagentHandle {
-  const rec = subagents.get(id);
-  if (!rec) throw new Error(`unknown subagent id: ${id}`);
+function requireSubagent(id: string, dctx: DispatchCtx): SubagentHandle {
+  const rec = dctx.subagents.get(id);
+  if (!rec || rec.dispatchId !== dctx.dispatchId) throw new Error(`unknown subagent id in this dispatch: ${id}`);
   return rec;
 }
 

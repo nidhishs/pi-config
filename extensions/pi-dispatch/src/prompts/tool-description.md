@@ -1,1 +1,1 @@
-Delegate bounded, self-contained subtasks to one or more isolated child agents through an async JavaScript dispatcher, returning their outputs to the parent. Best for work that benefits from separate context, concurrency, or specialized agents; prefer direct tools for a single known lookup.
+Delegate separable, bounded subtasks to one or more isolated child agents through async JavaScript orchestration. Best when independent context, parallelism, or a specialized role helps.
