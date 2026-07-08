@@ -4,15 +4,13 @@ import { dirname } from "node:path";
 import {
   createAgentSession,
   DefaultResourceLoader,
-  formatSize,
   getAgentDir,
   SessionManager,
-  truncateHead,
-  truncateTail,
   type AgentSession,
   type AgentSessionEvent,
   type CreateAgentSessionOptions,
 } from "@earendil-works/pi-coding-agent";
+import { formatToolResultText } from "pi-shared-utils/tool-results";
 import { emptyUsage, type SubagentLaunch, type SubagentUpdate } from "./types.ts";
 
 const AGENT_ROOT = getAgentDir();
@@ -31,13 +29,6 @@ export interface SpawnHandle {
   sessionPath: string;
   abort: () => void;
   finished: Promise<{ output?: string; error?: string }>;
-}
-
-// success keeps the head, errors keep the tail (the actionable end of a stack).
-export function capResultText(text: string, mode: "head" | "tail"): string {
-  const t = mode === "tail" ? truncateTail(text) : truncateHead(text);
-  if (!t.truncated) return text;
-  return `${t.content}\n\n[Truncated: ${t.outputLines} lines shown (${formatSize(t.maxBytes)} limit)]`;
 }
 
 function trackUsage(session: AgentSession, onUpdate: SpawnRequest["onUpdate"]): void {
@@ -92,9 +83,9 @@ export function spawnSubagent(req: SpawnRequest): SpawnHandle {
 
       if (abortRequested) return { error: "aborted" };
       const text = session.getLastAssistantText();
-      return { output: text ? capResultText(text, "head") : undefined };
+      return { output: text ? formatToolResultText(text, "success") : undefined };
     } catch (err) {
-      return { error: capResultText(String(err), "tail") };
+      return { error: formatToolResultText(err, "error") };
     } finally {
       session?.dispose();
       session = undefined;

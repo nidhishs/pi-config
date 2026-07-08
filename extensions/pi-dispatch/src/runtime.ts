@@ -1,7 +1,8 @@
 // Executes model-authored orchestration code with the dp primitives in scope.
 
 import { randomUUID } from "node:crypto";
-import { capResultText, type SpawnHandle } from "./spawn.ts";
+import { formatToolResultText } from "pi-shared-utils/tool-results";
+import type { SpawnHandle } from "./spawn.ts";
 import { emptyUsage, type SubagentHandle, type SubagentResult, type SubagentUpdate } from "./types.ts";
 
 export type Subagents = Map<string, SubagentHandle>; // session-global registry, keyed by runId
@@ -32,10 +33,10 @@ export async function runDispatchCode(code: string, dctx: DispatchCtx): Promise<
     const result = await new AsyncFunction("dp", code)(dp);
     const text = result === undefined
       ? listSubagents(dctx.subagents, dctx.dispatchId).map((r) => r.output).filter(Boolean).join("\n---\n")
-      : typeof result === "string" ? result : JSON.stringify(result, null, 2);
-    return capResultText(text, "head");
+      : result;
+    return formatToolResultText(text, "success");
   } catch (err) {
-    return capResultText(String(err), "tail");
+    return formatToolResultText(err, "error");
   } finally {
     // orphans: a run the body never joined must not outlive the dispatch
     for (const r of dctx.subagents.values())
