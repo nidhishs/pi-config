@@ -8,7 +8,7 @@ export interface SubagentUsage {
   cost: number;
 }
 
-export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh"] as const;
+export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
 
 export const emptyUsage = (): SubagentUsage => ({ inputTokens: 0, outputTokens: 0, cost: 0 });
 
@@ -45,7 +45,7 @@ export interface SubagentResult {
 export type SubagentUpdate = Partial<Pick<SubagentResult, "usage" | "activity">>;
 
 export interface SubagentHandle extends SubagentResult {
-  abort: () => void;
+  abort: (reason?: string) => void;
   done: Promise<SubagentResult>;
 }
 

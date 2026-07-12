@@ -27,7 +27,7 @@ function parseSubagentDef(name: string, raw: string): SubagentDef {
   };
 }
 
-// one bad file skips with a warning
+// agents are optional; skip unreadable or malformed files
 function loadSubagentDefs(): Record<string, SubagentDef> {
   const defs: Record<string, SubagentDef> = {};
   let files: string[] = [];
@@ -37,9 +37,7 @@ function loadSubagentDefs(): Record<string, SubagentDef> {
     const name = file.slice(0, -".md".length);
     try {
       defs[name] = parseSubagentDef(name, readFileSync(join(AGENTS_DIR, file), "utf8"));
-    } catch (err) {
-      console.warn(`[pi-dispatch] skipping agent ${file}: ${String(err)}`);
-    }
+    } catch { /* skip invalid agent */ }
   }
   return defs;
 }

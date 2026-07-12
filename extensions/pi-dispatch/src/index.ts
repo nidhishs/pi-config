@@ -104,7 +104,7 @@ export default function (pi: ExtensionAPI) {
       const victims = [...subagents.values()].filter(
         (r) => !r.finishedAt && (!target || r.dispatchId.startsWith(target) || r.id.startsWith(target)),
       );
-      for (const r of victims) r.abort();
+      for (const r of victims) r.abort("Cancelled by the user via /dispatch:cancel.");
       const level = target && victims.length === 0 ? "warning" : "info";
       ctx.ui.notify(`dispatch: cancelled ${victims.length} running subagent(s)`, level);
     },

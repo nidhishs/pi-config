@@ -27,7 +27,7 @@ interface SpawnRequest extends SubagentLaunch {
 
 export interface SpawnHandle {
   sessionPath: string;
-  abort: () => void;
+  abort: (reason?: string) => void;
   finished: Promise<{ output?: string; error?: string }>;
 }
 
@@ -37,11 +37,16 @@ function trackUsage(session: AgentSession, onUpdate: SpawnRequest["onUpdate"]): 
   session.subscribe((ev: AgentSessionEvent) => {
     if (ev.type === "tool_execution_start")
       return onUpdate({ activity: head(`${ev.toolName}(${JSON.stringify(ev.args) ?? ""})`) });
+    if (ev.type === "message_update" && ev.message.role === "assistant") {
+      const text = session.getLastAssistantText();
+      if (text) onUpdate({ activity: head(text) });
+      return;
+    }
     if (ev.type !== "message_end" || ev.message.role !== "assistant") return;
     usage.inputTokens += ev.message.usage.input;
     usage.outputTokens += ev.message.usage.output;
     usage.cost += ev.message.usage.cost.total;
-    onUpdate({ usage: { ...usage }, activity: head(session.getLastAssistantText() ?? "") });
+    onUpdate({ usage: { ...usage } });
   });
 }
 
@@ -68,28 +73,33 @@ async function buildSession(req: SpawnRequest): Promise<AgentSession> {
 
 export function spawnSubagent(req: SpawnRequest): SpawnHandle {
   let session: AgentSession | undefined;
-  // abort may arrive before the session exists; remember intent and apply on creation
-  let abortRequested = req.signal?.aborted ?? false;
-  const abort = () => { abortRequested = true; session?.abort(); };
-  req.signal?.addEventListener("abort", abort, { once: true });
+  // Preserve the first cancellation reason, including aborts before session creation.
+  let abortReason: string | undefined = req.signal?.aborted ? "Cancelled." : undefined;
+  const abort = (reason = "Cancelled.") => {
+    if (abortReason !== undefined) return;
+    abortReason = reason;
+    session?.abort();
+  };
+  const onSignalAbort = () => abort();
+  req.signal?.addEventListener("abort", onSignalAbort, { once: true });
 
   async function run(): Promise<{ output?: string; error?: string }> {
     try {
       session = await buildSession(req);
-      if (abortRequested) return { error: "aborted" };
+      if (abortReason !== undefined) return { error: formatToolResultText(abortReason, "error") };
 
       trackUsage(session, req.onUpdate);
       await session.prompt(req.prompt);
 
-      if (abortRequested) return { error: "aborted" };
+      if (abortReason !== undefined) return { error: formatToolResultText(abortReason, "error") };
       const text = session.getLastAssistantText();
       return { output: text ? formatToolResultText(text, "success") : undefined };
     } catch (err) {
-      return { error: formatToolResultText(err, "error") };
+      return { error: formatToolResultText(abortReason ?? err, "error") };
     } finally {
       session?.dispose();
       session = undefined;
-      req.signal?.removeEventListener("abort", abort);
+      req.signal?.removeEventListener("abort", onSignalAbort);
     }
   }
 

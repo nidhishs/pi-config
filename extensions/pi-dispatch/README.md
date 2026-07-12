@@ -121,7 +121,7 @@ Supported frontmatter fields:
 - `description`: shown to the parent model in the available agent list.
 - `model`: optional `provider/model-id`; omitted agents inherit the parent model.
 - `tools`: optional tool allowlist; omitted agents inherit all tools except `dispatch`.
-- `thinking`: one of `off`, `minimal`, `low`, `medium`, `high`, `xhigh`.
+- `thinking`: one of `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`.
 
 The Markdown body is appended to the child agent's system prompt.
 

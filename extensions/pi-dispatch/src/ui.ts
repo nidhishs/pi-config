@@ -166,6 +166,7 @@ export class DispatchWidget {
       row(
         formatParentDot(theme, this.frame),
         theme.fg("text", d.task),
+        theme.fg("accent", id.slice(0, 8)),
         theme.fg("muted", formatElapsed(d.startedAt, d.finishedAt)),
         usageText && theme.fg("muted", usageText)
       );
