@@ -1,5 +1,5 @@
 ---
-description: Use when you need to find or verify something, from a quick lookup to a broad scan, not a review or judgment call.
+description: Use when you need to find or verify context for the caller to interpret, from a quick lookup to a broad scan, not a review or judgment call.
 model: anthropic/claude-haiku-4-5
 tools: [read, grep, find, ls]
 thinking: medium

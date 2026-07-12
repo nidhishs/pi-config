@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "exa": {
+      "url": "https://mcp.exa.ai/mcp?tools=web_search_exa,web_fetch_exa",
+      "headers": { "x-api-key": "${EXA_API_KEY}" },
+      "description": "Search the web and fetch page contents."
+    },
+    "notion": {
+      "url": "https://mcp.notion.com/mcp",
+      "description": "Search, read, and manage content in Notion."
+    }
+  }
+}
