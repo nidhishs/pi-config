@@ -50,15 +50,15 @@ const expandHint = (theme: Theme): string =>
 const PRECEDENCE: Status[] = ["running", "failed", "completed"]; // most important first; lower index wins
 function summarizeSubagents(subagents: SubagentResult[]) {
   const usage = emptyUsage();
-  let status: Status = "completed";
+  const counts: Record<Status, number> = { running: 0, failed: 0, completed: 0 };
   for (const r of subagents) {
     usage.inputTokens += r.usage.inputTokens;
     usage.outputTokens += r.usage.outputTokens;
     usage.cost += r.usage.cost;
-    const st = statusOf(r);
-    if (PRECEDENCE.indexOf(st) < PRECEDENCE.indexOf(status)) status = st;
+    counts[statusOf(r)]++;
   }
-  return { status, usage };
+  const status = PRECEDENCE.find((status) => counts[status]) ?? "completed";
+  return { status, usage, counts };
 }
 
 export function renderDispatchCall(args: { task?: unknown }, theme: Theme) {
@@ -109,6 +109,7 @@ export const renderDispatchCompletion: MessageRenderer<DispatchResult> = (messag
 // ---- live widget ----
 
 const WIDGET_KEY = "dispatch";
+const MAX_DETAIL_ROWS = 3;
 
 interface DispatchRecord { task: string; startedAt: number; finishedAt?: number; }
 
@@ -170,7 +171,13 @@ export class DispatchWidget {
         theme.fg("muted", formatElapsed(d.startedAt, d.finishedAt)),
         usageText && theme.fg("muted", usageText)
       );
-      for (const r of subagents) {
+      const visible = subagents.length > MAX_DETAIL_ROWS ? subagents.slice(1-MAX_DETAIL_ROWS) : subagents;
+      if (subagents.length > MAX_DETAIL_ROWS) {
+        const { counts } = summarizeSubagents(subagents.slice(0, -visible.length));
+        const summary = PRECEDENCE.filter((status) => counts[status]).map((status) => `${counts[status]} ${status}`).join(", ");
+        row(theme.fg("muted", "  ⋮"), theme.fg("muted", `(omitted: ${summary})`));
+      }
+      for (const r of visible) {
         const st = statusOf(r);
         row(
           "  " + formatStatusIcon(theme, st, this.frame),
