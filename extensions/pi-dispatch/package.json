@@ -19,8 +19,8 @@
     "pi-shared-utils": "file:../pi-shared-utils"
   },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "^0.79",
-    "@earendil-works/pi-tui": "^0.79",
+    "@earendil-works/pi-coding-agent": "^0.80",
+    "@earendil-works/pi-tui": "^0.80",
     "@types/node": "^25",
     "typebox": "^1",
     "typescript": "^5"
