@@ -19,7 +19,7 @@ const toolParameters = Type.Object({
   action: StringEnum(["describe", "call"] as const, { description: "Action to perform." }),
   server: Type.Optional(Type.String({ description: "Configured server. Required for `describe` and `call`." })),
   tool: Type.Optional(Type.String({ description: "Tool from `describe`. Required for `call`." })),
-  args: Type.Optional(Type.Any({ description: "Arguments matching the tool schema." })),
+  args: Type.Optional(Type.Record(Type.String(), Type.Unknown(), { description: "Arguments matching the tool schema." })),
 });
 type ToolParameters = Static<typeof toolParameters>;
 
