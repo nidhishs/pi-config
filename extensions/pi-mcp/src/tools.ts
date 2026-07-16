@@ -9,9 +9,10 @@ import { getClient } from "./client.ts";
 import { notify, type ServerConfig } from "./config.ts";
 
 const prompts = createPromptLoader(import.meta.url);
-const renderPromptGuidelines = (servers: ServerConfig[]) => prompts.render("tool-prompt-guidelines", {
-  servers: servers.map((server) => server.name).join(", "),
-}).split(/\r?\n/).map((line) => line.trim().replace(/^[-*+]\s+/, "")).filter(Boolean);
+const renderPromptGuidelines = (servers: ServerConfig[]) => prompts.renderList("tool-prompt-guidelines", {
+  servers: servers.map(({ name, description }) => `  - \`${name}\`${description ? `: ${description}` : ""}`
+  ).join("\n"),
+});
 const TOOL_DESCRIPTION = prompts.render("tool-description");
 const PROMPT_SNIPPET = prompts.render("tool-prompt-snippet");
 

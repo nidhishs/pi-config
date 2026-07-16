@@ -39,6 +39,7 @@ interface PromptLoaderOptions {
 interface PromptLoader {
   resolve(name: string): URL;
   render(name: string, vars?: PromptVars): string;
+  renderList(name: string, vars?: PromptVars): string[];
 }
 
 // bound to the caller's module via import.meta.url;
@@ -50,9 +51,11 @@ export function createPromptLoader(
   const dir = options.dir ?? "prompts";
   const ext = options.ext ?? "md";
   const resolve = (name: string): URL => new URL(`./${dir}/${name}.${ext}`, baseImportMetaUrl);
+  const render = (name: string, vars?: PromptVars): string => renderPromptFile(resolve(name), vars);
+  const renderList = (name: string, vars?: PromptVars): string[] => render(name, vars)
+    .split(/^[-*+][ \t]+/m)
+    .map((item) => item.trim())
+    .filter(Boolean);
 
-  return {
-    resolve,
-    render: (name, vars) => renderPromptFile(resolve(name), vars),
-  };
+  return { resolve, render, renderList };
 }

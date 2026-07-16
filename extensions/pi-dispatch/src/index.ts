@@ -16,8 +16,7 @@ const promptVars = { agents: AGENT_LIST };
 
 const TOOL_DESCRIPTION = prompts.render("tool-description", promptVars);
 const PROMPT_SNIPPET = prompts.render("tool-prompt-snippet", promptVars);
-const PROMPT_GUIDELINES = prompts.render("tool-prompt-guidelines", promptVars)
-  .split(/\r?\n/).map((line) => line.trim().replace(/^[-*+]\s+/, "")).filter(Boolean);
+const PROMPT_GUIDELINES = prompts.renderList("tool-prompt-guidelines", promptVars);
 const TASK_PARAM = prompts.render("tool-param-task-description", promptVars);
 const CODE_PARAM = prompts.render("tool-param-code-description", promptVars);
 
