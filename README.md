@@ -2,6 +2,14 @@
 
 Personal pi configuration and extension packages.
 
+## Install
+
+```sh
+./install.sh
+```
+
+Select the extensions and skills you want; they're symlinked into `~/.pi/agent`. Re-running is safe and only touches links it created.
+
 ## Extensions
 
 Extensions live under `extensions/`. Each extension is an independently installable pi package with its own `package.json`, lockfile, dependencies, source, and tests.
