@@ -1,5 +1,6 @@
 // renders dispatch tool calls/results and the live in-tui progress widget
 
+import { basename } from "node:path";
 import { Box, Text, truncateToWidth, type TUI } from "@earendil-works/pi-tui";
 import {
   highlightCode, keyHint, type AgentToolResult, type ExtensionContext, type MessageRenderer, type Theme,
@@ -179,10 +180,12 @@ export class DispatchWidget {
       }
       for (const r of visible) {
         const st = statusOf(r);
+        const agent = basename(r.sessionPath, `-${r.id.slice(0, 8)}.jsonl`); // sessionPath's basename is "<agent>-<id8>.jsonl"
         row(
           "  " + formatStatusIcon(theme, st, this.frame),
           theme.fg("accent", r.id.slice(0, 8)),
           theme.fg("muted", formatElapsed(r.startedAt, r.finishedAt)),
+          theme.fg("muted", agent),
           st === "running" && r.activity && theme.fg("muted", r.activity)
         );
       }
