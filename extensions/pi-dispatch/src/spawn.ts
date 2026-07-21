@@ -13,6 +13,7 @@ import { formatToolResultText } from "pi-shared-utils/tool-results";
 import { emptyUsage, type SubagentLaunch, type SubagentUpdate } from "./types.ts";
 
 const AGENT_ROOT = getAgentDir();
+const ACTIVITY_PREVIEW_CHARS = 80;
 
 // one spawn: what to run + the task + where + session plumbing
 interface SpawnRequest extends SubagentLaunch {
@@ -31,12 +32,12 @@ export interface SpawnHandle {
 
 function trackUsage(session: AgentSession, onUpdate: SpawnRequest["onUpdate"]): void {
   const usage = emptyUsage();
-  const head = (s: string) => s.trim().slice(0, 80);
+  const head = (s: string) => s.trim().slice(0, ACTIVITY_PREVIEW_CHARS);
   session.subscribe((ev: AgentSessionEvent) => {
     if (ev.type === "tool_execution_start")
       return onUpdate({ activity: head(`${ev.toolName}(${JSON.stringify(ev.args) ?? ""})`) });
     if (ev.type === "message_update" && ev.message.role === "assistant") {
-      const text = session.getLastAssistantText();
+      const text = ev.message.content.map((content) => content.type === "text" ? content.text : "").join("");
       if (text) onUpdate({ activity: head(text) });
       return;
     }

@@ -20,7 +20,7 @@ export const liveSubagents = (subagents: Subagents, dispatchId: string): Subagen
 
 // serializable snapshots, control handles stripped -- for tool results / completion cards
 export const listSubagents = (subagents: Subagents, dispatchId: string): SubagentResult[] =>
-  liveSubagents(subagents, dispatchId).map(({ abort: _a, done: _d, ...rest }) => rest);
+  liveSubagents(subagents, dispatchId).map(({ abort: _a, done: _d, activity: _activity, ...rest }) => rest);
 
 export async function runDispatchCode(code: string, dctx: DispatchCtx): Promise<string> {
   const dp = {

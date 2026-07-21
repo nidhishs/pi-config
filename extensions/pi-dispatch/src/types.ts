@@ -39,12 +39,12 @@ export interface SubagentResult {
   error?: string;
   usage: SubagentUsage;
   sessionPath: string;
-  activity?: string; // latest tool call / assistant text head, live-updated
 }
 
-export type SubagentUpdate = Partial<Pick<SubagentResult, "usage" | "activity">>;
+export type SubagentUpdate = Partial<Pick<SubagentHandle, "usage" | "activity">>;
 
 export interface SubagentHandle extends SubagentResult {
+  activity?: string; // latest tool call / assistant text
   abort: (reason?: string) => void;
   done: Promise<SubagentResult>;
 }
