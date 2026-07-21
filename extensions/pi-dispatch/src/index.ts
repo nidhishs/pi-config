@@ -32,7 +32,6 @@ function makeSpawn(ctx: ExtensionContext, dispatchId: string, signal: AbortSigna
       ...resolveSubagent(agent, ctx), // sync throw BEFORE any async work -- keep first
       prompt, cwd: ctx.cwd,
       sessionPath: join(dispatchDir(dispatchId), `${agent ?? "agent"}-${runId.slice(0, 8)}.jsonl`),
-      modelRegistry: ctx.modelRegistry,
       signal, onUpdate,
     });
 }

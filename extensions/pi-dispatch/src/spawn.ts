@@ -8,7 +8,6 @@ import {
   SessionManager,
   type AgentSession,
   type AgentSessionEvent,
-  type CreateAgentSessionOptions,
 } from "@earendil-works/pi-coding-agent";
 import { formatToolResultText } from "pi-shared-utils/tool-results";
 import { emptyUsage, type SubagentLaunch, type SubagentUpdate } from "./types.ts";
@@ -20,7 +19,6 @@ interface SpawnRequest extends SubagentLaunch {
   prompt: string;
   cwd: string;
   sessionPath: string; // on-disk transcript destination
-  modelRegistry: NonNullable<CreateAgentSessionOptions["modelRegistry"]>;
   signal?: AbortSignal;
   onUpdate: (u: SubagentUpdate) => void;
 }
@@ -62,7 +60,7 @@ async function buildSession(req: SpawnRequest): Promise<AgentSession> {
 
   const { session } = await createAgentSession({
     cwd: req.cwd, agentDir: AGENT_ROOT,
-    model: req.model, thinkingLevel: req.thinkingLevel, modelRegistry: req.modelRegistry,
+    model: req.model, thinkingLevel: req.thinkingLevel,
     tools: req.tools,
     excludeTools: ["dispatch"], // anti-recursion
     resourceLoader: loader,
@@ -71,8 +69,17 @@ async function buildSession(req: SpawnRequest): Promise<AgentSession> {
   return session;
 }
 
+async function shutdownSession(session: AgentSession): Promise<void> {
+  try {
+    await session.extensionRunner.emit({ type: "session_shutdown", reason: "quit" });
+  } finally {
+    session.dispose();
+  }
+}
+
 export function spawnSubagent(req: SpawnRequest): SpawnHandle {
   let session: AgentSession | undefined;
+  let extensionsBound = false;
   // Preserve the first cancellation reason, including aborts before session creation.
   let abortReason: string | undefined = req.signal?.aborted ? "Cancelled." : undefined;
   const abort = (reason = "Cancelled.") => {
@@ -86,6 +93,8 @@ export function spawnSubagent(req: SpawnRequest): SpawnHandle {
   async function run(): Promise<{ output?: string; error?: string }> {
     try {
       session = await buildSession(req);
+      await session.bindExtensions({ mode: "print" });
+      extensionsBound = true;
       if (abortReason !== undefined) return { error: formatToolResultText(abortReason, "error") };
 
       trackUsage(session, req.onUpdate);
@@ -97,9 +106,16 @@ export function spawnSubagent(req: SpawnRequest): SpawnHandle {
     } catch (err) {
       return { error: formatToolResultText(abortReason ?? err, "error") };
     } finally {
-      session?.dispose();
+      const currentSession = session;
       session = undefined;
-      req.signal?.removeEventListener("abort", onSignalAbort);
+      try {
+        if (currentSession) {
+          if (extensionsBound) await shutdownSession(currentSession);
+          else currentSession.dispose();
+        }
+      } finally {
+        req.signal?.removeEventListener("abort", onSignalAbort);
+      }
     }
   }
 
