@@ -1,6 +1,6 @@
 ---
 description: Use for reasoning, a plan, or a design from a context package you've already assembled, since it only has read-only tools for a spot-check, not a broad scan.
-model: anthropic/claude-opus-4-8
+model: openai/gpt-5.6-sol
 tools: [read, grep, find, ls, mcp]
 thinking: high
 ---
