@@ -1,9 +1,9 @@
-import { keyHint, type AgentToolResult, type ExtensionAPI, type Theme, type ToolRenderResultOptions } from "@earendil-works/pi-coding-agent";
+import { type AgentToolResult, type ExtensionAPI, type Theme, type ToolRenderResultOptions } from "@earendil-works/pi-coding-agent";
 import { type ImageContent, StringEnum } from "@earendil-works/pi-ai";
-import { Text } from "@earendil-works/pi-tui";
+import { Text, visibleWidth } from "@earendil-works/pi-tui";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { createPromptLoader } from "pi-shared-utils/prompting";
-import { formatToolResultText, runTextToolResult } from "pi-shared-utils/tool-results";
+import { expandHint, formatToolResultText, runTextToolResult } from "pi-shared-utils/tool-results";
 import { type Static, type TSchema, Type } from "typebox";
 import { getClient } from "./client.ts";
 import { notify, type ServerConfig } from "./config.ts";
@@ -15,6 +15,7 @@ const renderPromptGuidelines = (servers: ServerConfig[]) => prompts.renderList("
 });
 const TOOL_DESCRIPTION = prompts.render("tool-description");
 const PROMPT_SNIPPET = prompts.render("tool-prompt-snippet");
+const MAX_CALL_WIDTH = 80;
 
 const toolParameters = Type.Object({
   action: StringEnum(["describe", "call"] as const, { description: "Action to perform." }),
@@ -24,24 +25,41 @@ const toolParameters = Type.Object({
 });
 type ToolParameters = Static<typeof toolParameters>;
 
-function renderProxyCall(params: Partial<ToolParameters>, theme: Theme): Text {
+function renderCallLine(title: string, params: Record<string, unknown> | undefined, theme: Theme): Text {
+  if (!params || Object.keys(params).length === 0) return new Text(title, 0, 0);
+
+  const args = JSON.stringify(params);
+  const available = Math.max(0, MAX_CALL_WIDTH - visibleWidth(title) - "()".length);
+  const omitted = `...${args.at(-1) ?? ""}`;
+  const shown = args.length > available
+    ? `${args.slice(0, Math.max(0, available - omitted.length))}${omitted}` : args;
+  return new Text(title + theme.fg("muted", `(${shown})`), 0, 0);
+}
+
+function renderMcpCall(params: Partial<ToolParameters>, theme: Theme): Text {
   const target = params.action === "call" ? [params.server, params.tool].filter(Boolean).join(".") : params.server;
-  return new Text([
+  const title = [
     theme.fg("toolTitle", theme.bold("mcp")),
     params.action && theme.fg("accent", params.action),
     target && theme.fg("muted", target),
-  ].filter(Boolean).join(" "), 0, 0);
+  ].filter(Boolean).join(" ");
+  return renderCallLine(title, params.action === "call" ? params.args : undefined, theme);
+}
+
+function renderDirectCall(toolName: string, params: Record<string, unknown>, theme: Theme): Text {
+  return renderCallLine(theme.fg("toolTitle", theme.bold(toolName)), params, theme);
 }
 
 function renderMcpResult(result: AgentToolResult<undefined>, options: ToolRenderResultOptions, theme: Theme): Text {
   const lines = result.content.flatMap((content) => content.type === "text" ? content.text.split("\n") : []);
-  const shown = options.expanded ? lines : lines.slice(0, 10);
-  const remaining = lines.length - shown.length;
-  let text = `\n${shown.map((line) => theme.fg("toolOutput", line)).join("\n")}`;
-  if (remaining > 0) {
-    text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`;
+  if (lines.length === 0) return new Text("", 0, 0);
+  if (options.expanded) {
+    return new Text(lines.map((line) => theme.fg("toolOutput", line)).join("\n"), 0, 0);
   }
-  return new Text(text, 0, 0);
+  return new Text(
+    theme.fg("muted", "⎿  ") + theme.fg("syntaxNumber", `~${lines.length} lines`) + expandHint(theme),
+    0, 0,
+  );
 }
 
 export function registerProxyTool(pi: ExtensionAPI, servers: ServerConfig[]): void {
@@ -52,7 +70,7 @@ export function registerProxyTool(pi: ExtensionAPI, servers: ServerConfig[]): vo
     promptSnippet: PROMPT_SNIPPET,
     promptGuidelines: renderPromptGuidelines(servers),
     parameters: toolParameters,
-    renderCall: renderProxyCall,
+    renderCall: renderMcpCall,
     renderResult: renderMcpResult,
     execute: (_id, params, signal) => runProxyTool(servers, params, signal),
   });
@@ -74,6 +92,7 @@ export async function registerDirectTools(pi: ExtensionAPI, servers: ServerConfi
           promptSnippet: description,
           parameters: { properties: {}, ...tool.inputSchema } as unknown as TSchema,
           renderResult: renderMcpResult,
+          renderCall: (params, theme) => renderDirectCall(tool.name, params as Record<string, unknown>, theme),
           execute: (_id, params, signal) => runMcpTool(cfg, tool.name, params as Record<string, unknown>, signal),
         });
       }

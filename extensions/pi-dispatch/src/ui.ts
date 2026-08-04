@@ -3,8 +3,9 @@
 import { basename } from "node:path";
 import { Box, Text, truncateToWidth, type TUI } from "@earendil-works/pi-tui";
 import {
-  highlightCode, keyHint, type AgentToolResult, type ExtensionContext, type MessageRenderer, type Theme,
+  highlightCode, type AgentToolResult, type ExtensionContext, type MessageRenderer, type Theme,
 } from "@earendil-works/pi-coding-agent";
+import { expandHint } from "pi-shared-utils/tool-results";
 import { liveSubagents, type Subagents } from "./runtime.ts";
 import { emptyUsage, type DispatchResult, type SubagentResult, type SubagentUsage } from "./types.ts";
 
@@ -43,9 +44,6 @@ function formatUsage({ inputTokens, outputTokens, cost }: SubagentUsage): string
 
 const formatStatusLine = (theme: Theme, ...segments: Array<string | false | null | undefined>): string =>
   segments.filter(Boolean).join(theme.fg("muted", " • "));
-
-const expandHint = (theme: Theme): string =>
-  `${theme.fg("muted", " (")}${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`;
 
 // aggregate = highest-precedence status across children (a failed child must not be forgotten while another still runs)
 const PRECEDENCE: Status[] = ["running", "failed", "completed"]; // most important first; lower index wins

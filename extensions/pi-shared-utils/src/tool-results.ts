@@ -1,9 +1,14 @@
 import {
   formatSize,
+  keyHint,
   truncateHead,
   truncateTail,
   type AgentToolResult,
+  type Theme,
 } from "@earendil-works/pi-coding-agent";
+
+export const expandHint = (theme: Theme): string =>
+  `${theme.fg("muted", " (")}${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`;
 
 export function formatToolResultText(value: unknown, kind: "success" | "error"): string {
   const text = kind === "error" ? formatErrorValue(value) : formatSuccessValue(value);
