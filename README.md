@@ -17,6 +17,7 @@ Extensions live under `extensions/`. Each extension is an independently installa
 Current extensions:
 
 - `extensions/pi-dispatch`: adds the `dispatch` tool for delegating tasks to subagents.
+- `extensions/pi-goal`: runs a bounded, in-memory goal loop in Pi's interactive TUI.
 - `extensions/pi-mcp`: connects Pi to MCP servers lazily (`describe` -> `call`).
 
 ## Shared Utilities

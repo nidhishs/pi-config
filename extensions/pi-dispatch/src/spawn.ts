@@ -103,7 +103,7 @@ export function spawnSubagent(req: SpawnRequest): SpawnHandle {
 
       if (abortReason !== undefined) return { error: formatToolResultText(abortReason, "error") };
       const text = session.getLastAssistantText();
-      return { output: text ? formatToolResultText(text, "success") : undefined };
+      return { output: text || undefined };
     } catch (err) {
       return { error: formatToolResultText(abortReason ?? err, "error") };
     } finally {

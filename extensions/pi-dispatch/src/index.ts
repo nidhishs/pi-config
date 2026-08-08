@@ -1,13 +1,13 @@
 // wires the dispatch tool + /dispatch command: prompt loading, spawn binding, interactive-vs-blocking delivery
 
-import { getAgentDir, type AgentToolResult, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { AgentToolResult, ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { Type } from "typebox";
 import { AGENT_LIST, resolveSubagent } from "./agents.ts";
 import { createPromptLoader } from "pi-shared-utils/prompting";
 import { spawnSubagent } from "./spawn.ts";
-import { listSubagents, runDispatchCode, type DispatchCtx, type Subagents } from "./runtime.ts";
+import { dispatchDir, listSubagents, runDispatchCode, type DispatchCtx, type Subagents } from "./runtime.ts";
 import { DispatchWidget, renderDispatchCall, renderDispatchCompletion, renderDispatchResult } from "./ui.ts";
 import type { DispatchResult } from "./types.ts";
 
@@ -21,10 +21,6 @@ const TASK_PARAM = prompts.render("tool-param-task-description", promptVars);
 const CODE_PARAM = prompts.render("tool-param-code-description", promptVars);
 
 const DISPATCH_RESULT = "dispatch_result"; // customType for the background completion message
-
-// one directory per dispatch; also interpolated into the tool result text below
-const DISPATCH_ROOT = join(getAgentDir(), "dispatch", "sessions");
-const dispatchDir = (dispatchId: string) => join(DISPATCH_ROOT, dispatchId);
 
 function makeSpawn(ctx: ExtensionContext, dispatchId: string, signal: AbortSignal | undefined): DispatchCtx["spawn"] {
   return (prompt, agent, runId, onUpdate) =>
@@ -58,8 +54,11 @@ export default function (pi: ExtensionAPI) {
 
     // interactive subagents outlive the turn, so they ignore its abort signal; blocking ones honor it
     const dctx: DispatchCtx = { dispatchId, subagents, spawn: makeSpawn(ctx, dispatchId, interactive ? undefined : signal) };
-    const details = (finishedAt?: number): DispatchResult =>
-      ({ dispatchId, task, code, startedAt, finishedAt, subagents: listSubagents(subagents, dispatchId) });
+    // Keep raw child output out of persisted metadata; transcripts remain available separately.
+    const details = (finishedAt?: number): DispatchResult => ({
+      dispatchId, task, code, startedAt, finishedAt,
+      subagents: listSubagents(subagents, dispatchId).map(({ output: _output, ...rest }) => rest),
+    });
     const result = (text: string, finishedAt?: number): AgentToolResult<DispatchResult> =>
       ({ content: [{ type: "text" as const, text }], details: details(finishedAt) });
     const dispatchResult = (content: string) => prompts.render("event-dispatch-result", { id, content });

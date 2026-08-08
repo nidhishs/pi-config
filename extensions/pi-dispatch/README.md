@@ -36,7 +36,6 @@ dp.join(id: string): Promise<{
   id: string;
   output?: string;
   error?: string;
-  sessionPath: string;
 }>
 ```
 
@@ -133,7 +132,7 @@ Each dispatch gets a session directory under Pi's agent dir:
 ~/.pi/agent/dispatch/sessions/<dispatchId>/
 ```
 
-Each subagent writes a transcript file inside that directory. The dispatch result includes the transcript location so the parent agent can inspect it if needed.
+Each subagent writes a transcript file in this directory. A successful dispatch’s complete result is written to `result.txt` when possible. If a saved result is truncated for display, the notice includes the path to the complete file.
 
 ## Cancellation
 

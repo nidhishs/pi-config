@@ -1,9 +1,15 @@
 // Executes model-authored orchestration code with the dp primitives in scope.
 
+import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { randomUUID } from "node:crypto";
-import { formatToolResultText } from "pi-shared-utils/tool-results";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { formatToolResultText, formatToolResultValue } from "pi-shared-utils/tool-results";
 import type { SpawnHandle } from "./spawn.ts";
 import { emptyUsage, type SubagentHandle, type SubagentResult, type SubagentUpdate } from "./types.ts";
+
+const DISPATCH_ROOT = join(getAgentDir(), "dispatch", "sessions");
+export const dispatchDir = (dispatchId: string) => join(DISPATCH_ROOT, dispatchId);
 
 export type Subagents = Map<string, SubagentHandle>; // session-global registry, keyed by runId
 
@@ -26,15 +32,23 @@ export async function runDispatchCode(code: string, dctx: DispatchCtx): Promise<
   const dp = {
     run: (prompt: string, agent?: string) => start(String(prompt), agent, dctx).id,
     // join's projection is what the model sees -- keep it minimal
-    join: (id: string) => requireSubagent(id, dctx).done.then(({ id, output, error, sessionPath }) => ({ id, output, error, sessionPath })),
+    join: (id: string) => requireSubagent(id, dctx).done.then(({ id, output, error }) => ({ id, output, error })),
     cancel: (id: string) => { const r = requireSubagent(id, dctx); if (!r.finishedAt) r.abort(); },
   };
   try {
     const result = await new AsyncFunction("dp", code)(dp);
     const text = result === undefined
       ? listSubagents(dctx.subagents, dctx.dispatchId).map((r) => r.output).filter(Boolean).join("\n---\n")
-      : result;
-    return formatToolResultText(text, "success");
+      : formatToolResultValue(result);
+    const resultDir = dispatchDir(dctx.dispatchId);
+    const resultPath = join(resultDir, "result.txt");
+    try {
+      await mkdir(resultDir, { recursive: true });
+      await writeFile(resultPath, text, "utf8");
+    } catch {
+      return formatToolResultText(text, "success");
+    }
+    return formatToolResultText(text, "success", resultPath);
   } catch (err) {
     return formatToolResultText(err, "error");
   } finally {

@@ -2,7 +2,7 @@ Async JavaScript body. Only `dp` is in scope.
 
 ```ts
 dp.run(prompt: string, agent?: string): string
-dp.join(id: string): Promise<{ id: string; output?: string; error?: string; sessionPath: string }>
+dp.join(id: string): Promise<{ id: string; output?: string; error?: string }>
 dp.cancel(id: string): void
 ```
 

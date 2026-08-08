@@ -10,13 +10,18 @@ import {
 export const expandHint = (theme: Theme): string =>
   `${theme.fg("muted", " (")}${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`;
 
-export function formatToolResultText(value: unknown, kind: "success" | "error"): string {
-  const text = kind === "error" ? formatErrorValue(value) : formatSuccessValue(value);
+export function formatToolResultText(
+  value: unknown, kind: "success" | "error", fullOutputPath?: string,
+): string {
+  const text = kind === "error" ? formatErrorValue(value) : formatToolResultValue(value);
   const result = kind === "error" ? truncateTail(text) : truncateHead(text);
+  if (!result.truncated) return text;
+
   const warning = result.truncatedBy === "lines"
     ? `Truncated: showing ${result.outputLines} of ${result.totalLines} lines`
     : `Truncated: ${result.outputLines} lines shown (${formatSize(result.maxBytes)} limit)`;
-  return result.truncated ? `${result.content}\n\n[${warning}]` : text;
+  const fullOutput = fullOutputPath ? `. Full output: ${fullOutputPath}` : "";
+  return `${result.content}\n\n[${warning}${fullOutput}]`;
 }
 
 export async function runTextToolResult(
@@ -29,7 +34,7 @@ export async function runTextToolResult(
   }
 }
 
-function formatSuccessValue(value: unknown): string {
+export function formatToolResultValue(value: unknown): string {
   if (typeof value === "string") return value;
   try { return JSON.stringify(value, null, 2) ?? ""; }
   catch { return String(value);}
