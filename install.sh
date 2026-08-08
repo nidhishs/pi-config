@@ -52,6 +52,12 @@ case "${choice:-all}" in
        for p in "${picks[@]}"; do chosen+=("${items[$((p - 1))]}"); done ;;
 esac
 
+# The append-system-prompt is global and independent of package selection.
+with_append_system=1
+printf 'Link bundled APPEND_SYSTEM.md? [Y/n]: '
+read -r append_reply
+case "${append_reply:-y}" in [nN]*) with_append_system=0 ;; esac
+
 # Extensions ship default config, but a user may prefer their own, so ask before linking it.
 with_config=1
 for item in "${chosen[@]}"; do
@@ -64,15 +70,28 @@ done
 
 # Reruns are authoritative: forget every link we might have made, then relink the pick.
 mkdir -p "$AGENT_DIR/extensions" "$AGENT_DIR/skills"
+unlink "$AGENT_DIR/APPEND_SYSTEM.md"
 for item in "${items[@]}"; do
   read -r _ target <<< "$(config_for "$item")"
   unlink "$AGENT_DIR/$item"
   [ -z "$target" ] || unlink "$AGENT_DIR/$target"
 done
 
+# Install and link selected resources.
 for item in "${chosen[@]}"; do
   case "$item" in extensions/*) (cd "$REPO/$item" && npm install) ;; esac
   link "$REPO/$item" "$AGENT_DIR/$item"
-  read -r src target <<< "$(config_for "$item")"
-  if [ "$with_config" = 1 ] && [ -n "$target" ]; then link "$REPO/$src" "$AGENT_DIR/$target"; fi
 done
+
+# Link configs for selected extensions.
+for item in "${chosen[@]}"; do
+  read -r src target <<< "$(config_for "$item")"
+  if [ "$with_config" = 1 ] && [ -n "$target" ]; then
+    link "$REPO/$src" "$AGENT_DIR/$target"
+  fi
+done
+
+# Link global APPEND_SYSTEM prompt.
+if [ "$with_append_system" = 1 ]; then
+  link "$REPO/config/APPEND_SYSTEM.md" "$AGENT_DIR/APPEND_SYSTEM.md"
+fi

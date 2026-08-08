@@ -8,7 +8,7 @@ Personal pi configuration and extension packages.
 ./install.sh
 ```
 
-Select the extensions and skills you want; they're symlinked into `~/.pi/agent`. Re-running is safe and only touches links it created.
+Select the extensions, skills and configs you want; they're symlinked into `~/.pi/agent`. Re-running is safe and only touches links it created.
 
 ## Extensions
 
@@ -17,7 +17,6 @@ Extensions live under `extensions/`. Each extension is an independently installa
 Current extensions:
 
 - `extensions/pi-dispatch`: adds the `dispatch` tool for delegating tasks to subagents.
-- `extensions/pi-goal`: runs a bounded, in-memory goal loop in Pi's interactive TUI.
 - `extensions/pi-mcp`: connects Pi to MCP servers lazily (`describe` -> `call`).
 
 ## Shared Utilities
