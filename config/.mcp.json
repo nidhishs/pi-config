@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "exa": {
-      "url": "https://mcp.exa.ai/mcp?tools=web_search_exa,web_fetch_exa",
-      "headers": { "x-api-key": "${EXA_API_KEY}" },
+    "keenable": {
+      "url": "https://api.keenable.ai/mcp",
+      "headers": { "X-API-Key": "${KEENABLE_API_KEY}" },
       "description": "Search the web and fetch page contents."
     },
     "notion": {
