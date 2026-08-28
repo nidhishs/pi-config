@@ -1,1 +1,1 @@
-Short 3-6 word title-style label for this dispatch, shown in the UI and logs.
+3-6 word label for the task or workflow, shown in the UI and logs.

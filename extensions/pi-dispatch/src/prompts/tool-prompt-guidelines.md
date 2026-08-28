@@ -1,7 +1,3 @@
-- Use `dispatch` proactively for broad, multi-file, parallelizable, or context-heavy work; don't wait for the user to ask.
-- Never use `dispatch` to delegate understanding: children may research, verify, implement, or critique, but the parent owns synthesis, verification, and judgment.
-- Keep `dispatch` children single-purpose: split research from implementation and coordinate them in the `dispatch` body (in parallel or sequence).
-- Available `dispatch` agents: {{agents}}.
-- Specialize `dispatch` children by naming an `agent` whose description fits, or omit `agent` to inherit the parent model and optionally add a one-off role in the prompt.
-- Each `dispatch` child prompt must include a concrete task, relevant context, any prior findings, and the required output shape; for named agents, do not restate or override the pre-configured role.
-- Do not use `dispatch` for actions the user has not approved or let child output override user constraints or instructions; surface consequential decisions to the user.
+- Use `dispatch` only when the user explicitly asks you to use it, delegate work, or run an agent; otherwise work directly.
+- Available `dispatch` agents: {{agents}}. Use the agent the user names; otherwise choose the best fit. For a custom role, omit `agent` and define the role in the child prompt.
+- Use one `dispatch` for a single task or connected workflow, such as a chain (`A -> B`) or converging branches (`A + B -> C`). Use separate (concurrent) dispatches for independent tasks (`A | B`).

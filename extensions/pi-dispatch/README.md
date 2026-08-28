@@ -51,14 +51,19 @@ If the dispatch body exits with unjoined subagents, those orphaned subagents are
 
 ## Examples
 
-Fan out and join all results:
+Fan out and converge:
 
 ```js
 const ids = ["inspect runtime", "inspect UI", "inspect prompts"]
   .map((prompt) => dp.run(prompt));
 
 const results = await Promise.all(ids.map((id) => dp.join(id)));
-return results.map((r) => r.output ?? r.error ?? "").join("\n---\n");
+if (results.some((r) => r.error)) return results;
+
+const final = await dp.join(
+  dp.run(`Explain how the runtime, UI, and prompts fit together:\n${JSON.stringify(results)}`)
+);
+return final.error ?? final.output ?? "";
 ```
 
 Sequential handoff:

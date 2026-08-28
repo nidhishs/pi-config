@@ -6,11 +6,10 @@ dp.join(id: string): Promise<{ id: string; output?: string; error?: string }>
 dp.cancel(id: string): void
 ```
 
-`dp.run(...)` starts a child and returns a scope-local id. Use `dp.join(id)` to wait for it or `dp.cancel(id)` to cancel it; both only accept ids returned by `dp.run(...)` in this same body. Join or cancel every child this body starts before returning, or it will be cancelled on exit. Do not sleep, poll, or read transcripts for progress.
+- `dp.run` starts a child and returns a scope-local `id`. You must `dp.join(id)` or `dp.cancel(id)` every child before returning; unfinished children are cancelled on exit.
+- Each child starts with its own context window and no parent conversation history. Include all task-specific context in its prompt: goal, relevant facts, constraints, and expected output.
 
-Child prompts are self-contained: the child has not seen this conversation. Include the goal, relevant files/facts, and output shape. Choose format by use: JSON/structured data for comparing, merging, routing, or passing onward; focused findings with enough context/evidence when the parent will read it.
-
-Start independent children before joining so they run in parallel:
+Example:
 
 ```js
 const ids = [
@@ -19,7 +18,12 @@ const ids = [
 ];
 
 const results = await Promise.all(ids.map((id) => dp.join(id)));
-return results.map((r) => r.error ?? r.output ?? "").join("\n---\n");
+if (results.some((r) => r.error)) return results;
+
+const final = await dp.join(
+  dp.run(`Summarize into one recommendation:\n${JSON.stringify(results)}`)
+);
+return final.error ?? final.output ?? "";
 ```
 
-Return what the parent should receive: a string or JSON-serializable value. If omitted, joined child outputs are concatenated in spawn order.
+Return a string or JSON-serializable value for the parent. Without an explicit return, joined outputs are concatenated in spawn order.
