@@ -1,5 +1,5 @@
 ---
-description: Use when a task needs real changes made, code, docs, or config, not just an answer.
+description: Implements requested changes to code, documentation, or configuration.
 model: openai/gpt-5.6-terra
 thinking: medium
 ---

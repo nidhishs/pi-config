@@ -1,5 +1,5 @@
 ---
-description: Use for reasoning, a plan, or a design from a context package you've already assembled, since it only has read-only tools for a spot-check, not a broad scan.
+description: Analyzes prepared context, checks targeted files or sources, and returns plans, designs, or recommendations.
 model: openai/gpt-5.6-sol
 tools: [read, grep, find, ls, mcp]
 thinking: high

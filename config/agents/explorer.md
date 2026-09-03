@@ -1,5 +1,5 @@
 ---
-description: Use when you need to find or verify context for the caller to interpret, from a quick lookup to a broad scan, not a review or judgment call.
+description: Investigates a self-contained question or scope in the codebase and external sources, then returns verified facts, references, and usages.
 model: openai/gpt-5.6-luna
 tools: [read, grep, find, ls, mcp]
 thinking: high

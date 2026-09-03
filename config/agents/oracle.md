@@ -1,5 +1,5 @@
 ---
-description: Use for hard reasoning calls that remain inconclusive after an initial pass, from a self-contained context package you've already assembled, since it has no tools to check anything itself.
+description: Performs tool-free, deep reasoning on difficult or high-stakes problems from complete evidence and returns a concrete recommendation.
 model: openai/gpt-5.6-sol
 tools: []
 thinking: xhigh
