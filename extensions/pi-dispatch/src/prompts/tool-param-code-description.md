@@ -8,6 +8,7 @@ dp.cancel(id: string): void
 
 - `dp.run` starts a child and returns a scope-local `id`. You must `dp.join(id)` or `dp.cancel(id)` every child before returning; unfinished children are cancelled on exit.
 - Each child starts with its own context window and no parent conversation history. Include all task-specific context in its prompt: goal, relevant facts, constraints, and expected output.
+- Write each `dp.run(...)` prompt as a valid JavaScript string expression. In template literals, escape literal backslashes, backticks, and `${` sequences; interpolate only intentionally.
 
 Example:
 

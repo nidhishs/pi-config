@@ -1,3 +1,3 @@
-- Use `dispatch` only when the user explicitly asks you to use it, delegate work, or run an agent; otherwise work directly.
+- Invoke `dispatch` only in response to an explicit user request to use `dispatch`, delegate work, or run an agent; never invoke it proactively.
 - Available `dispatch` agents: {{agents}}. Use the agent the user names; otherwise choose the best fit. For a custom role, omit `agent` and define the role in the child prompt.
-- Use one `dispatch` for a single task or connected workflow, such as a chain (`A -> B`) or converging branches (`A + B -> C`). Use separate (concurrent) dispatches for independent tasks (`A | B`).
+- Use one `dispatch` per standalone task or connected workflow: run independent tasks as separate, concurrent `dispatch` calls (`A | B`); combine child runs only when downstream work consumes earlier outputs (`A -> B`, `A + B -> C`). A shared topic or merely collecting outputs is not a dependency.
